@@ -7,7 +7,7 @@ from templated_email.backends.vanilla_django import TemplateBackend
 from templated_email.utils import InlineImage  # noqa
 
 
-def get_connection(backend=None, template_prefix=None, template_suffix=None,
+def get_email_backend(backend_path=None, template_prefix=None, template_suffix=None,
                    fail_silently=False, **kwargs):
     """Load a templated e-mail backend and return an instance of it.
 
@@ -18,7 +18,7 @@ def get_connection(backend=None, template_prefix=None, template_suffix=None,
     """
     # This method is mostly a copy of the backend loader present in
     # django.core.mail.get_connection
-    klass_path = backend or getattr(settings, 'TEMPLATED_EMAIL_BACKEND',
+    klass_path = backend_path or getattr(settings, 'TEMPLATED_EMAIL_BACKEND',
                                     TemplateBackend)
     if isinstance(klass_path, six.string_types):
         try:
@@ -63,8 +63,9 @@ def send_templated_mail(template_name, from_email, recipient_list, context,
     Final behaviour of sending depends on the currently selected engine.
     See BackendClass.send.__doc__
     """
-    connection = connection or get_connection(template_prefix=template_prefix,
-                                              template_suffix=template_suffix)
-    return connection.send(template_name, from_email, recipient_list, context,
-                           cc=cc, bcc=bcc, fail_silently=fail_silently,
+    email_backend = get_email_backend(template_prefix=template_prefix,
+                                      template_suffix=template_suffix)
+    
+    return email_backend.send(template_name, from_email, recipient_list, context,
+                           cc=cc, bcc=bcc, connection=connection, fail_silently=fail_silently,
                            headers=headers, create_link=create_link, **kwargs)
